@@ -1,0 +1,6 @@
+outs:
+- md5: d931df42148ab67aed4f9a31c3663411.dir
+  size: 53393
+  nfiles: 1
+  hash: md5
+  path: genia_services_csv_german_credit_risk_v1.0.0_training_20250825
