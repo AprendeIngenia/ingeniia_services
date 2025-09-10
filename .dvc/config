@@ -1,0 +1,2 @@
+['remote "genia_services_storage"']
+    url = https://dagshub.com/AprendeIngenia/genia_services.dvc
