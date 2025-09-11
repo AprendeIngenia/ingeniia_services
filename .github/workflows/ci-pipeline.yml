@@ -17,7 +17,7 @@ jobs:
           python-version: '3.11.8'
 
       - name: Install requirements
-        run: pip install -r ./python/credit_scoring/requirements.txt
+        run: pip install -r ./python/credit_scoring/requirements_ci.txt
 
       - name: Run tests
         run: pytest ./python/credit_scoring/tests/test_model_creation.py
