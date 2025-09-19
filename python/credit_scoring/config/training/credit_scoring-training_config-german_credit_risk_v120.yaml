@@ -9,7 +9,7 @@ environment: venv
 data_source:
   dataset_name: genia_services_csv_german_credit_risk_v1.0.0_training_5k_20250824
   data_path:
-    dataset_path: ../../datasets/genia_services_csv_german_credit_risk_v1.0.0_training_20250824/german_credit_risk.csv
+    dataset_path: ../../datasets/genia_services_csv_german_credit_risk_v1.0.0_training_20250825/german_credit_risk.csv
     artifact_path: "model"
     preprocessor_filename: "german_credit_risk_preprocessor.joblib"
   version_tag: v1

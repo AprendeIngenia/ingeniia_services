@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 # Copiamos solo el archivo de requerimientos primero para aprovechar el cache de Docker
-COPY requirements.txt .
+COPY container-images/credit_scoring/requirements.txt .
 
 # Instalamos las dependencias
 RUN pip install --no-cache-dir --upgrade pip && \
@@ -28,7 +28,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copiamos el código fuente del proyecto de credit_scoring
 # La estructura dentro del contenedor será /app/src, /app/models, etc.
-COPY ../../python/credit_scoring/ .
+COPY python/credit_scoring/ .
 
 # Exponemos el puerto en el que correrá la aplicación
 EXPOSE 8000
