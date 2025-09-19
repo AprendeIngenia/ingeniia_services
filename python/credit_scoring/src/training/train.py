@@ -122,6 +122,10 @@ class CreditScoringModelTraining:
             log.error(f"File not found at: {self.dataset_path}")
             raise
         
+        if 'Unnamed: 0' in df.columns:
+            df = df.drop(columns=['Unnamed: 0'])
+            log.info("✔ Columna 'Unnamed: 0' eliminada del DataFrame.")
+        
         log.info("✔ splitting data into training and validation sets.")
         df_train, df_val = train_test_split(
             df,

@@ -1,3 +1,13 @@
+# python
 *.venv/
 *venv/
+venv/
+.venv/
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.pytest_cache
+
+# datasets
 datasets/genia_services_csv_german_credit_risk_v1.0.0_training_20250825
