@@ -1,0 +1,89 @@
+{
+  "mlp": [
+    {
+      "id": "mlp001",
+      "title": "Introducción y Entorno de Desarrollo",
+      "description": " En este video introductorio aprenderás qué es el Deep Learning, en qué casos se utiliza y por qué es tan importante en la Inteligencia Artificial moderna.",
+      "youtube_id": "GnqEYBuBM9E",
+      "duration_minutes": 51,
+      "thumbnail_url": "/images/thumbnails/mlp_01.png",
+      "whiteboard": {
+        "id": "mlp001_wb",
+        "preview_url": "/images/whiteboards/mlp_wb_01.png",
+        "file_url": "/whiteboards/mlp_01_introduccion.excalidraw"
+      }
+    },
+    {
+      "id": "mlp002",
+      "title": "Perceptron Multicapa",
+      "description": "En este video aprenderás que es un Perceptron Multicapa (MLP) en qué casos se utiliza y por qué es la base de la Inteligencia Artificial moderna.",
+      "youtube_id": "bAB1hag3gLY",
+      "duration_minutes": 30,
+      "thumbnail_url": "/images/thumbnails/mlp_02.png",
+      "whiteboard": {
+        "id": "mlp002_wb",
+        "preview_url": "/images/whiteboards/mlp_wb_02.png",
+        "file_url": "/whiteboards/mlp_wb_02.excalidraw"
+      }
+    },
+    {
+      "id": "mlp003",
+      "title": "Entrenando tu Primera Red Neuronal",
+      "description": "En este video aprenderás a crear un sistema modular que no solo entrena un modelo, sino que también gestiona todo el ciclo de vida de una red neuronal profunda.",
+      "youtube_id": "GnqEYBuBM9E",
+      "duration_minutes": 41,
+      "thumbnail_url": "/images/thumbnails/mlp_03.png",
+      "whiteboard": {
+        "id": "mlp003_wb",
+        "preview_url": "/images/whiteboards/mlp_wb_03.png",
+        "file_url": "/whiteboards/mlp_wb_03.excalidraw"
+      }
+    },
+    {
+      "id": "mlp004",
+      "title": "Despliega y Versiona tu MLP",
+      "description": "En este video aprenderás a crear un pipeline completo para versionar profesionalmente tus datos y tus modelos.",
+      "youtube_id": "rDS2i25MKJA",
+      "duration_minutes": 37,
+      "thumbnail_url": "/images/thumbnails/mlp_04.png",
+      "whiteboard": {
+        "id": "mlp004_wb",
+        "preview_url": "/images/whiteboards/mlp_wb_04.png",
+        "file_url": "/whiteboards/mlp_wb_04.excalidraw"
+      }
+    }
+  ],
+  "cnn": [
+    {
+      "id": "cnn001",
+      "title": "Introducción a las Redes Convolucionales",
+      "description": "Descubre cómo las CNNs 'ven' y procesan imágenes.",
+      "youtube_id": "zfiSAzU_8bA",
+      "duration_minutes": 15,
+      "thumbnail_url": "/images/thumbnails/cnn_video1.jpg",
+      "whiteboard": {
+        "id": "cnn001_wb",
+        "preview_url": "/images/whiteboards/cnn_wb_01.png",
+        "file_url": "/whiteboards/cnn_01_introduccion.excalidraw"
+      }
+    }
+  ],
+  "code_snippets": {
+    "mlp": [
+      {
+        "id": "mlp_snip_01",
+        "title": "Definiendo la Arquitectura",
+        "language": "python",
+        "github_url": "https://github.com/tu-usuario/ingeniia_services/blob/main/python/credit_scoring/src/training/model.py",
+        "code": "import torch\nimport torch.nn as nn\nimport torch.nn.functional as F\nfrom typing import Optional, List\n\n\nclass CreditScoringModel(nn.Module):\n    \"\"\"\n    Multi-Layer Perceptron for Credit Scoring\n    \n    Architecture:\n    - Input Layer: num_features (depends on preprocessing)\n    - Hidden Layers: Dynamic\n    - Output Layer: Linear (-> 1) para producir logits.\n    \"\"\"\n    def __init__(self, num_features: int, hidden_layers: List[int],  dropout_rate: float = 0.1, use_batch_norm: bool = True, activation_fn: str = \"ReLU\"):\n        super(CreditScoringModel, self).__init__()\n        \n        self.num_features = num_features\n        self.hidden_layers_config = hidden_layers\n        self.dropout_rate = dropout_rate\n        self.use_batch_norm = use_batch_norm\n        self.activation_fn_name = activation_fn\n        \n        layers = []\n        input_size = num_features\n        \n        # network architecture dinamyc\n        for i, layer_size in enumerate(hidden_layers):\n            \n            # lineal layer (neural)\n            layers.append(nn.Linear(input_size, layer_size))\n            \n            # batch normalization\n            if use_batch_norm:\n                layers.append(nn.BatchNorm1d(layer_size))\n                \n            # activation function\n            if activation_fn == \"ReLU\":\n                layers.append(nn.ReLU())\n            elif activation_fn == \"LeakyReLU\":\n                layers.append(nn.LeakyReLU())\n            elif activation_fn == \"GELU\":\n                layers.append(nn.GELU())\n                \n            # dropout\n            layers.append(nn.Dropout(dropout_rate))\n            \n            # output_size -> input size\n            input_size = layer_size\n        \n        # output layer\n        layers.append(nn.Linear(input_size, 1))\n        self.network = nn.Sequential(*layers)\n                \n    def forward(self, x: torch.Tensor) -> torch.Tensor:\n        \"\"\"\n        Forward pass through the network\n        Args:\n            x: Input tensor of shape (batch_size, num_features)\n            \n        Returns:\n            Output tensor of shape (batch_size, 1) with probabilities\n        \"\"\"\n        return self.network(x)"
+      },
+      {
+        "id": "mlp_snip_02",
+        "title": "Orquestando el Entrenamiento",
+        "language": "python",
+        "github_url": "https://github.com/tu-usuario/ingeniia_services/blob/main/python/credit_scoring/src/training/train.py",
+        "code": "\"\"\"\nTraining Module for Credit Scoring MLP\n\"\"\"\nimport os\nimport sys\nimport yaml\nimport torch\nimport mlflow\nimport logging as log\nfrom pathlib import Path\nfrom typing import Tuple, Dict, List\n\nsys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), \"../..\")))\nfrom src.processing.main import CreditDataPreprocessor\nfrom src.training.model import CreditScoringModel\n\n\nclass CreditScoringModelTraining:\n    def __init__(self, config_path: Path) -> None:\n        with open(config_path, 'r') as f:\n            self.params = yaml.safe_load(f)\n        log.info(\"--- Config Training ---\")\n        # ... (extract params from self.params)\n        self.device = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\n\n    def _load_and_split_data(self) -> Tuple[pd.DataFrame, pd.DataFrame]:\n        # ... (implementation for loading and splitting data)\n        pass\n\n    def _preprocess_data(self, df_train: pd.DataFrame, df_val: pd.DataFrame) -> Tuple[torch.Tensor, ...]:\n        # ... (implementation for preprocessing data)\n        pass\n\n    @staticmethod\n    def _compute_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> Dict[str, float]:\n        # ... (implementation for computing metrics)\n        pass\n\n    def _run_training_loop(self, model, criterion, optimizer, scheduler, x_train, y_train, x_val, y_val):\n        # ... (implementation of the training loop with early stopping)\n        pass\n\n    def train(self):\n        log.info(f\"✔ hardware used: {self.device}\")\n        mlflow.set_experiment(self.mlflow_project_name)\n\n        with mlflow.start_run(run_name=f\"credit_scoring_run\"):\n            log.info(\"--- Init Training ---\")\n            \n            # 1. Load and split data\n            df_train, df_val = self._load_and_split_data()\n            \n            # 2. Preprocess data\n            x_train, y_train, x_val, y_val = self._preprocess_data(df_train, df_val)\n            num_features = x_train.shape[1]\n            \n            # 3. Configure model, optimizer, and loss\n            model = CreditScoringModel(\n                num_features=num_features,\n                # ... other params\n            ).to(self.device)\n            criterion = self._setup_loss_function(y_train)\n            optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)\n            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)\n\n            # 4. Run training loop\n            self._run_training_loop(model, criterion, optimizer, scheduler, x_train, y_train, x_val, y_val)\n\n            # 5. Load best model and log artifacts\n            best_model_path = f\"models/{self.model_name}\"\n            model.load_state_dict(torch.load(best_model_path))\n            self._log_artifacts(model, x_val, y_val)\n\nif __name__ == \"__main__\":\n    # ... (argparse and main execution logic)\n    trainer = CreditScoringModelTraining(Path(cli_args.config))\n    trainer.train()"
+      }
+    ]
+  }
+}

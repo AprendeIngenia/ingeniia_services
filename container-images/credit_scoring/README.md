@@ -38,13 +38,13 @@ http://localhost:8000/docs
 ```
 
 ## 📝 Cómo Usar la API (¡Haciendo una Predicción!)
-El endpoint principal es /predict. Puedes enviarle una solicitud POST con los datos del solicitante en formato JSON.
+El endpoint principal es /mlp_demo. Puedes enviarle una solicitud POST con los datos del solicitante en formato JSON.
 
 - Opción A: Usando la Documentación Interactiva (Swagger)
 
     - Ve a http://localhost:8000/docs.
 
-    - Despliega el endpoint POST /predict.
+    - Despliega el endpoint POST /mlp_demo.
 
     - Haz clic en el botón "Try it out".
 
@@ -58,7 +58,7 @@ El endpoint principal es /predict. Puedes enviarle una solicitud POST con los da
 
         ```bash
         curl -X 'POST' \
-        'http://localhost:8000/predict' \
+        'http://localhost:8000/mlp_demo' \
         -H 'accept: application/json' \
         -H 'Content-Type: application/json' \
         -d '{
