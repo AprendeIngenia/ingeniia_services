@@ -1,5 +1,5 @@
 """
-schemas.py: this file ensures that data entering and leaving the API has the correct structure and types.
+python/credit_scoring/src/server/schemas.py: this file ensures that data entering and leaving the API has the correct structure and types.
 """
 
 from enum import Enum

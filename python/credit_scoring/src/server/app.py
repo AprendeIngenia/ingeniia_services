@@ -1,5 +1,5 @@
 """
-app.py:  uses FastAPI to create the /predict endpoint that receives the data, passes it to the predictor_instance, and returns the result.
+python/credit_scoring/src/server/app.py:  uses FastAPI to create the /predict endpoint that receives the data, passes it to the predictor_instance, and returns the result.
 """
 
 import os
@@ -8,6 +8,7 @@ import logging as log
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from src.server.schemas import CreditRiskInput, CreditRiskOutput
@@ -22,13 +23,27 @@ app = FastAPI(
     version="1.0.0"
 )
 
+origins = [
+    "http://localhost",
+    "http://localhost:8080", # La URL donde corre tu frontend de Vite
+    # "https://www.tu-dominio-en-produccion.com", # <- Añade tu dominio real aquí en el futuro
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Permite todos los métodos (GET, POST, etc)
+    allow_headers=["*"], # Permite todas las cabeceras
+)
+
 # EndPoint API
 @app.get("/", include_in_schema=False)
 async def root():
     """Redirige a la documentación de la API."""
     return RedirectResponse(url="/docs")
 
-@app.post("/predict", 
+@app.post("/mlp_demo", 
           response_model=CreditRiskOutput,
           tags=["Predicciones"],
           summary="Realiza una predicción de riesgo crediticio")
