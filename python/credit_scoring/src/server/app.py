@@ -25,7 +25,7 @@ app = FastAPI(
 
 origins = [
     "http://localhost",
-    "http://localhost:8080", # La URL donde corre tu frontend de Vite
+    "http://localhost:8080",
     # "https://www.tu-dominio-en-produccion.com", # <- Añade tu dominio real aquí en el futuro
 ]
 
@@ -33,8 +33,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"], # Permite todos los métodos (GET, POST, etc)
-    allow_headers=["*"], # Permite todas las cabeceras
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # EndPoint API
