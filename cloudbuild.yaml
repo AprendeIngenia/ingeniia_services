@@ -1,0 +1,29 @@
+steps:
+# Paso 1: Construir la imagen para credit-scoring-service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'build-credit-scoring-service'
+  args:
+    - 'build'
+    - '-t'
+    - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}'
+    - '--file=container-images/credit_scoring/Dockerfile'
+    - '.' # El contexto de compilación es la raíz del repositorio
+
+# Paso 2: Construir la imagen para content-service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'build-content-service'
+  args:
+    - 'build'
+    - '-t'
+    - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}'
+    - '--file=container-images/content_service/Dockerfile' # Asumiendo que existe un Dockerfile similar
+    - '.' # El contexto de compilación es la raíz del repositorio
+
+# El bloque 'images' se encarga de hacer push de las imágenes a Artifact Registry
+images:
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}'
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}'
+
+options:
+  # Aumenta el tamaño del disco si los builds son grandes
+  diskSizeGb: 100
