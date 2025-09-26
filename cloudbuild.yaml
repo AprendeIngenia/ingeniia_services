@@ -34,7 +34,7 @@ steps:
     - '--region=us-central1'
     - '--ingress=internal'
     - '--service-account=credit-scoring-sa@${PROJECT_ID}.iam.gserviceaccount.com'
-    - '--allow-unauthenticated' # Revisa si realmente necesitas esto con ingress=internal
+    - '--allow-unauthenticated'
 
 # Paso 5: Desplegar content-service en Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -58,3 +58,4 @@ images:
 
 options:
   diskSizeGb: 100
+  logging: CLOUD_LOGGING_ONLY
