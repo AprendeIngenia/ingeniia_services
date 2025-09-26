@@ -7,7 +7,7 @@ steps:
     - '-t'
     - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}'
     - '--file=container-images/credit_scoring/Dockerfile'
-    - '.' # El contexto de compilación es la raíz del repositorio
+    - '.'
 
 # Paso 2: Construir la imagen para content-service
 - name: 'gcr.io/cloud-builders/docker'
@@ -16,14 +16,45 @@ steps:
     - 'build'
     - '-t'
     - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}'
-    - '--file=container-images/content_service/Dockerfile' # Asumiendo que existe un Dockerfile similar
-    - '.' # El contexto de compilación es la raíz del repositorio
+    - '--file=container-images/content_service/Dockerfile'
+    - '.'
 
-# El bloque 'images' se encarga de hacer push de las imágenes a Artifact Registry
+# Paso 3: Hacer push de ambas imágenes (esto es manejado por la sección 'images' al final)
+
+# Paso 4: Desplegar credit-scoring-service en Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'deploy-credit-scoring-service'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'credit-scoring-service'
+    - '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}'
+    - '--platform=managed'
+    - '--region=us-central1'
+    - '--ingress=internal'
+    - '--service-account=credit-scoring-sa@${PROJECT_ID}.iam.gserviceaccount.com'
+    - '--allow-unauthenticated' # Revisa si realmente necesitas esto con ingress=internal
+
+# Paso 5: Desplegar content-service en Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'deploy-content-service'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'content-service'
+    - '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}'
+    - '--platform=managed'
+    - '--region=us-central1'
+    - '--ingress=internal'
+    - '--service-account=content-service-sa@${PROJECT_ID}.iam.gserviceaccount.com'
+    - '--allow-unauthenticated'
+
+# La sección 'images' se encarga del push a Artifact Registry
 images:
   - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}'
   - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}'
 
 options:
-  # Aumenta el tamaño del disco si los builds son grandes
   diskSizeGb: 100
