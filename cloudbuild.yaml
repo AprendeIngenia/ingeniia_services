@@ -1,41 +1,22 @@
 steps:
 # Paso 1: Construir la imagen para credit-scoring-service
 - name: 'gcr.io/cloud-builders/docker'
-  id: 'build-credit-scoring-service'
-  args:
-    - 'build'
-    - '-t'
-    - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}'
-    - '--file=container-images/credit_scoring/Dockerfile'
-    - '.'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}', '--file=container-images/credit_scoring/Dockerfile', '.']
 
 # Paso 2: Enviar (push) la imagen de credit-scoring-service
 - name: 'gcr.io/cloud-builders/docker'
-  id: 'push-credit-scoring-service'
-  args:
-    - 'push'
-    - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}'
+  args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}']
 
 # Paso 3: Construir la imagen para content-service
 - name: 'gcr.io/cloud-builders/docker'
-  id: 'build-content-service'
-  args:
-    - 'build'
-    - '-t'
-    - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}'
-    - '--file=container-images/content_service/Dockerfile'
-    - '.'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}', '--file=container-images/content_service/Dockerfile', '.']
 
 # Paso 4: Enviar (push) la imagen de content-service
 - name: 'gcr.io/cloud-builders/docker'
-  id: 'push-content-service'
-  args:
-    - 'push'
-    - 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}'
+  args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}']
 
 # Paso 5: Desplegar credit-scoring-service en Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  id: 'deploy-credit-scoring-service'
   entrypoint: gcloud
   args:
     - 'run'
@@ -47,10 +28,10 @@ steps:
     - '--ingress=internal'
     - '--service-account=credit-scoring-sa@${PROJECT_ID}.iam.gserviceaccount.com'
     - '--allow-unauthenticated'
+    - '--memory=1Gi' # <-- AÑADIDO AQUÍ
 
 # Paso 6: Desplegar content-service en Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  id: 'deploy-content-service'
   entrypoint: gcloud
   args:
     - 'run'
@@ -62,6 +43,7 @@ steps:
     - '--ingress=internal'
     - '--service-account=content-service-sa@${PROJECT_ID}.iam.gserviceaccount.com'
     - '--allow-unauthenticated'
+    - '--memory=1Gi' # <-- Y AQUÍ TAMBIÉN
 
 options:
   diskSizeGb: 100
