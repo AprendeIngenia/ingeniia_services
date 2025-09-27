@@ -35,4 +35,5 @@ EXPOSE 8000
 
 # Comando para ejecutar el servidor de Uvicorn cuando el contenedor inicie
 # Escucha en todas las interfaces (0.0.0.0) para ser accesible desde fuera del contenedor
-CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn src.server.app:app --host 0.0.0.0 --port $PORT

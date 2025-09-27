@@ -32,4 +32,5 @@ COPY python/content_service/ .
 EXPOSE 8000
 
 # Comando para ejecutar el servidor de Uvicorn
-CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn src.server.app:app --host 0.0.0.0 --port $PORT
