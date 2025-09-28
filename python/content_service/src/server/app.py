@@ -34,6 +34,7 @@ app = FastAPI(
 origins = [
     "http://localhost",
     "http://localhost:8080", # La URL donde corre tu frontend de Vite
+    "https://api-gateway-710497808623.us-central1.run.app"
     # "https://www.tu-dominio-en-produccion.com", # <- Añade tu dominio real aquí en el futuro
 ]
 
@@ -50,6 +51,11 @@ app.add_middleware(
 async def root():
     """Redirige a la documentación interactiva de la API."""
     return RedirectResponse(url="/docs")
+
+@app.get("/healthz", tags=["Health"])
+async def health_check():
+    """Verifica que el servicio esté vivo y respondiendo."""
+    return {"status": "ok"}
 
 @app.get("/videos/topic/{topic_name}", response_model=List[Video], tags=["Contenido"], summary="Obtiene la lista de videos para un tema específico")
 async def get_videos_by_topic(topic_name: str) -> List[Video]:
