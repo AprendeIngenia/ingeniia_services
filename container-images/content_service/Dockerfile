@@ -25,13 +25,11 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copiamos el código fuente del proyecto de content_service
-# La estructura dentro del contenedor será /app/src, etc.
-#COPY python/content_service/ .
-COPY python/content_service/src/ .
+COPY python/content_service/ .
 
 # Exponemos el puerto en el que correrá la aplicación
 EXPOSE 8000
 
 # Comando para ejecutar el servidor de Uvicorn
 #CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD uvicorn server.app:app --host 0.0.0.0 --port $PORT
+CMD uvicorn src.server.app:app --host 0.0.0.0 --port $PORT
