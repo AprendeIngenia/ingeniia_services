@@ -28,7 +28,8 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copiamos el código fuente del proyecto de credit_scoring
 # La estructura dentro del contenedor será /app/src, /app/models, etc.
-COPY python/credit_scoring/ .
+#COPY python/credit_scoring/ .
+COPY python/credit_scoring/src/ .
 
 # Exponemos el puerto en el que correrá la aplicación
 EXPOSE 8000
@@ -36,4 +37,4 @@ EXPOSE 8000
 # Comando para ejecutar el servidor de Uvicorn cuando el contenedor inicie
 # Escucha en todas las interfaces (0.0.0.0) para ser accesible desde fuera del contenedor
 #CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD uvicorn src.server.app:app --host 0.0.0.0 --port $PORT
+CMD uvicorn server.app:app --host 0.0.0.0 --port $PORT
