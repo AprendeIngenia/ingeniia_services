@@ -16,8 +16,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # --- Etapa 2: Final ---
 # Creamos la imagen final a partir de una base limpia
-FROM python:3.11-sli
-ENV PYTHONPATH=/app
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
 
 WORKDIR /app
 
@@ -32,6 +35,6 @@ COPY python/content_service/ .
 EXPOSE 8080
 
 # Comando para ejecutar el servidor de Uvicorn
-#CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
 # CMD uvicorn src.server.app:app --host 0.0.0.0 --port $PORT
 CMD ["bash","-lc","uvicorn src.server.app:app --host 0.0.0.0 --port ${PORT:-8080}"]

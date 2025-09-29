@@ -66,6 +66,8 @@ async def predict_credit_risk(request: CreditRiskInput) -> CreditRiskOutput:
             detail=f"Ocurrió un error interno al procesar la solicitud: {e}"
         )
         
+        
+log.info("Credit scoring service loaded. Endpoints: /mlp_demo")
 
 """
 local execute:

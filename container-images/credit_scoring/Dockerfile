@@ -18,8 +18,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # --- Etapa 2: Final ---
 # Creamos la imagen final a partir de una base limpia
-FROM python:3.11-sli
-ENV PYTHONPATH=/app
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app
 
 WORKDIR /app
 
