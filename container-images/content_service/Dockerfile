@@ -1,6 +1,6 @@
 # --- Etapa 1: Builder ---
 # Usamos una imagen base de Python slim para reducir el tamaño.
-FROM python:3.11-slim as builde
+FROM python:3.11-slim as builder
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
