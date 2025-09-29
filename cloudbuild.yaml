@@ -25,9 +25,8 @@ steps:
     - '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/credit-scoring-service:${SHORT_SHA}'
     - '--platform=managed'
     - '--region=us-central1'
-    - '--ingress=internal'
     - '--service-account=credit-scoring-sa@${PROJECT_ID}.iam.gserviceaccount.com'
-    - '--no-allow-unauthenticated'
+    - '--allow-unauthenticated'
     - '--memory=1Gi'
 
 # Paso 6: Desplegar content-service en Cloud Run
@@ -40,9 +39,8 @@ steps:
     - '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}'
     - '--platform=managed'
     - '--region=us-central1'
-    - '--ingress=internal'
     - '--service-account=content-service-sa@${PROJECT_ID}.iam.gserviceaccount.com'
-    - '--no-allow-unauthenticated'
+    - '--allow-unauthenticated'
     - '--memory=1Gi'
 
 options:
