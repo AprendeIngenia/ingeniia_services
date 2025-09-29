@@ -18,7 +18,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # --- Etapa 2: Final ---
 # Creamos la imagen final a partir de una base limpia
-FROM python:3.11-slim
+FROM python:3.11-sli
+ENV PYTHONPATH=/app
 
 WORKDIR /app
 
@@ -30,9 +31,10 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY python/credit_scoring/ .
 
 # Exponemos el puerto en el que correrá la aplicación
-EXPOSE 8000
+EXPOSE 8080
 
 # Comando para ejecutar el servidor de Uvicorn cuando el contenedor inicie
 # Escucha en todas las interfaces (0.0.0.0) para ser accesible desde fuera del contenedor
-#CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD uvicorn src.server.app:app --host 0.0.0.0 --port $PORT
+# CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# CMD uvicorn src.server.app:app --host 0.0.0.0 --port $PORT
+CMD ["bash","-lc","uvicorn src.server.app:app --host 0.0.0.0 --port ${PORT:-8080}"]
