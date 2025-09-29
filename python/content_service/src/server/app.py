@@ -97,3 +97,6 @@ async def get_snippets_by_topic(topic_name: str) -> List[CodeSnippet]:
             detail=f"Los snippets para el tema '{topic_name}' no fueron encontrados."
         )
     return snippets
+
+# al final de app.py
+log.info("Content service loaded. Endpoints: /healthz, /videos/topic/{topic}, /snippets/topic/{topic}")
