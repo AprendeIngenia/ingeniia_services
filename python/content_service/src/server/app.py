@@ -32,10 +32,8 @@ app = FastAPI(
 )
 
 origins = [
-    "http://localhost",
-    "http://localhost:8080", # La URL donde corre tu frontend de Vite
-    "https://api-gateway-710497808623.us-central1.run.app"
-    # "https://www.tu-dominio-en-produccion.com", # <- Añade tu dominio real aquí en el futuro
+    "http://localhost:8080",
+    "https://ingeniia.co"
 ]
 
 app.add_middleware(
