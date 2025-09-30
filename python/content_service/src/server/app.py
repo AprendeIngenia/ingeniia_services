@@ -4,12 +4,14 @@ import json
 import logging as log
 from typing import List
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from src.server.schemas import Video, CodeSnippet
 
 log.basicConfig(level=log.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+
 
 # --- Carga de datos al iniciar ---
 CONTENT_DATA = {}
@@ -32,16 +34,19 @@ app = FastAPI(
 )
 
 origins = [
+    "http://localhost",
     "http://localhost:8080",
-    "https://ingeniia.co"
+    "https://ingeniia.co",
+    "https://www.ingeniia.co",
+    "https://api.ingeniia.co",
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"], # Permite todos los métodos (GET, POST, etc)
-    allow_headers=["*"], # Permite todas las cabeceras
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --- Endpoints de la API ---
@@ -50,12 +55,14 @@ async def root():
     """Redirige a la documentación interactiva de la API."""
     return RedirectResponse(url="/docs")
 
-@app.get("/healthz", tags=["Health"])
-async def health_check():
-    """Verifica que el servicio esté vivo y respondiendo."""
+# router versionado
+v1 = APIRouter(prefix="/v1", tags=["Contenido"])
+
+@v1.get("/healthz", tags=["Health"])
+async def healthz():
     return {"status": "ok"}
 
-@app.get("/videos/topic/{topic_name}", response_model=List[Video], tags=["Contenido"], summary="Obtiene la lista de videos para un tema específico")
+@v1.get("/videos/topic/{topic_name}", response_model=List[Video], tags=["Contenido"], summary="Obtiene la lista de videos para un tema específico")
 async def get_videos_by_topic(topic_name: str) -> List[Video]:
     """
     Recupera una lista de videos filtrada por el tema de la red neuronal.
@@ -72,11 +79,10 @@ async def get_videos_by_topic(topic_name: str) -> List[Video]:
             status_code=404,
             detail=f"El tema '{topic_name}' no fue encontrado."
         )
-
     return videos
 
 
-@app.get("/snippets/topic/{topic_name}", response_model=List[CodeSnippet], tags=["Contenido"], summary="Obtiene la lista de snippets de código para un tema")
+@v1.get("/snippets/topic/{topic_name}", response_model=List[CodeSnippet], tags=["Contenido"], summary="Obtiene la lista de snippets de código para un tema")
 async def get_snippets_by_topic(topic_name: str) -> List[CodeSnippet]:
     """
     Recupera una lista de fragmentos de código para un tema específico.
@@ -96,5 +102,13 @@ async def get_snippets_by_topic(topic_name: str) -> List[CodeSnippet]:
         )
     return snippets
 
-# al final de app.py
-log.info("Content service loaded. Endpoints: /healthz, /videos/topic/{topic}, /snippets/topic/{topic}")
+app.include_router(v1)
+
+@app.get("/healthz", include_in_schema=False, deprecated=True)
+async def health_legacy(): return {"status": "ok"}
+
+@app.get("/videos/topic/{topic_name}", include_in_schema=False, deprecated=True)
+async def videos_legacy(topic_name: str): return await get_videos_by_topic(topic_name)
+
+@app.get("/snippets/topic/{topic_name}", include_in_schema=False, deprecated=True)
+async def snippets_legacy(topic_name: str): return await get_snippets_by_topic(topic_name)

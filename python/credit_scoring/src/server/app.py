@@ -6,7 +6,7 @@ import os
 import sys
 import logging as log
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -24,8 +24,11 @@ app = FastAPI(
 )
 
 origins = [
+    "http://localhost",
     "http://localhost:8080",
-    "https://ingeniia.co"
+    "https://ingeniia.co",
+    "https://www.ingeniia.co",
+    "https://api.ingeniia.co",
 ]
 
 app.add_middleware(
@@ -42,10 +45,28 @@ async def root():
     """Redirige a la documentación de la API."""
     return RedirectResponse(url="/docs")
 
-@app.post("/mlp_demo", 
-          response_model=CreditRiskOutput,
-          tags=["Predicciones"],
-          summary="Realiza una predicción de riesgo crediticio")
+# router versionado
+v1 = APIRouter(prefix="/v1", tags=["Predicciones"])
+
+@v1.get("/healthz", tags=["Health"])
+async def healthz():
+    return {"status": "ok"}
+
+@v1.post("/predict", response_model=CreditRiskOutput, summary="Predicción de riesgo crediticio")
+async def predict_credit_risk(request: CreditRiskInput) -> CreditRiskOutput:
+    try:
+        log.info("Solicitud predict: %s", request.model_dump(by_alias=True))
+        prediction_result = predictor_instance.predict(request)
+        return CreditRiskOutput(**prediction_result)
+    except Exception as e:
+        log.exception("Error en predicción")
+        raise HTTPException(status_code=500, detail=f"Error interno: {e}")
+    
+app.include_router(v1)
+
+@app.post("/mlp_demo", response_model=CreditRiskOutput, tags=["Predicciones"], deprecated=True)
+async def mlp_demo(request: CreditRiskInput) -> CreditRiskOutput:
+    return await predict_credit_risk(request)
 
 async def predict_credit_risk(request: CreditRiskInput) -> CreditRiskOutput:
     """
