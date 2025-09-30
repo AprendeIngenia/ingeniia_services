@@ -24,9 +24,8 @@ app = FastAPI(
 )
 
 origins = [
-    "http://localhost",
     "http://localhost:8080",
-    # "https://www.tu-dominio-en-produccion.com", # <- Añade tu dominio real aquí en el futuro
+    "https://ingeniia.co"
 ]
 
 app.add_middleware(
