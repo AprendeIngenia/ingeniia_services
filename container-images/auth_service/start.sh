@@ -1,8 +1,8 @@
-set -euo pipefail
+set -e
 
-# Alembic necesita DATABASE_URL en env (lo obtendremos de Secret Manager)
-echo "[start] running alembic upgrade head..."
+echo "▶ Running Alembic migrations..."
 alembic upgrade head
 
-echo "[start] launching uvicorn..."
+echo "▶ Starting Uvicorn..."
 exec uvicorn src.server.app:app --host 0.0.0.0 --port "${PORT:-8080}"
+
