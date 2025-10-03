@@ -1,0 +1,96 @@
+services:
+
+  # Base de datos
+  postgres:
+      image: postgres:15
+      container_name: ingeniia-postgres
+      environment:
+        POSTGRES_USER: user
+        POSTGRES_PASSWORD: pass
+        POSTGRES_DB: ingeniia_auth
+      ports:
+        - "5432:5432"
+      volumes:
+        - postgres-data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U user -d ingeniia_auth"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+      restart: unless-stopped
+
+  # Servicio de Credit Scoring
+  credit-scoring-service:
+    container_name: credit-scoring-service
+    build:
+      context: ./python/credit_scoring
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./python/credit_scoring:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  # Servicio de Contenido
+  content-service:
+    container_name: content-service
+    build:
+      context: ./python/content_service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./python/content_service:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # Servicio de Autenticación
+  auth-service:
+    container_name: auth-service
+    build:
+      context: ./python/auth_service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./python/auth_service:/app
+    env_file:
+      - ./python/auth_service/.env.local
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+    command: >
+      bash -c "
+        echo 'Waiting for database...' &&
+        alembic upgrade head &&
+        echo 'Database migration complete.' &&
+        uvicorn src.server.app:app --host 0.0.0.0 --port 8002 --reload
+      "
+
+  # API Gateway
+  api-gateway:
+    container_name: api-gateway
+    build:
+      context: ../ingeniia_gateway 
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../ingeniia_gateway:/app
+    depends_on:
+      - credit-scoring-service
+      - content-service
+      - auth-service
+    environment:
+      - GATEWAY_DEBUG=True
+      - SERVICES_CONFIG_PATH=/app/config/local_services.yaml
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

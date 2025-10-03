@@ -1,5 +1,4 @@
 # --- Etapa 1: Builder ---
-# Usamos una imagen base de Python slim para reducir el tamaño.
 FROM python:3.11-slim as builder
 
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -35,6 +34,4 @@ COPY python/content_service/ .
 EXPOSE 8080
 
 # Comando para ejecutar el servidor de Uvicorn
-# CMD ["uvicorn", "src.server.app:app", "--host", "0.0.0.0", "--port", "8000"]
-# CMD uvicorn src.server.app:app --host 0.0.0.0 --port $PORT
 CMD ["bash","-lc","uvicorn src.server.app:app --host 0.0.0.0 --port ${PORT:-8080}"]

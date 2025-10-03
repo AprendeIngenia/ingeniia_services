@@ -1,4 +1,9 @@
-# Ignorar imagenes
+env/
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
 *.jpg
 *.jpeg
 *.png

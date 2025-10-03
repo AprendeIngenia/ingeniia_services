@@ -15,7 +15,15 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/content-service:${SHORT_SHA}']
 
-# Paso 5: Desplegar credit-scoring-service en Cloud Run
+# Paso 5: Construir la imagen para auth-service
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/auth-service:${SHORT_SHA}', '--file=container-images/auth_service/Dockerfile', '.']
+
+# Paso 6: Enviar (push) la imagen de auth-service
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/auth-service:${SHORT_SHA}']
+
+# Paso 7: Desplegar credit-scoring-service en Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
   args:
@@ -30,7 +38,7 @@ steps:
     - '--allow-unauthenticated'
     - '--memory=1Gi'
 
-# Paso 6: Desplegar content-service en Cloud Run
+# Paso 8: Desplegar content-service en Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
   args:
@@ -44,6 +52,30 @@ steps:
     - '--service-account=content-service-sa@${PROJECT_ID}.iam.gserviceaccount.com'
     - '--allow-unauthenticated'
     - '--memory=1Gi'
+
+# Paso 9: Desplegar auth-service en Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'auth-service'
+    - '--port=8080'
+    - '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/ingeniia-services/auth-service:${SHORT_SHA}'
+    - '--platform=managed'
+    - '--region=us-central1'
+    - '--service-account=auth-service-sa@${PROJECT_ID}.iam.gserviceaccount.com'
+    - '--allow-unauthenticated'
+    - '--memory=512Mi'
+    - '--add-cloudsql-instances=ingeniiaservices:us-central1:ingeniia-auth-db'
+    # secretos
+    - '--set-secrets'
+    - 'DATABASE_URL=AUTH_DATABASE_URL:latest,JWT_SECRET_KEY=AUTH_JWT_SECRET:latest,SENDGRID_API_KEY=AUTH_SENDGRID_API_KEY:latest,RECAPTCHA_SECRET_KEY=AUTH_RECAPTCHA_SECRET:latest'
+    # envs
+    - '--set-env-vars'
+    - 'ENVIRONMENT=development,JWT_ALGORITHM=HS256,ACCESS_TOKEN_EXPIRE_MINUTES=30,REFRESH_TOKEN_EXPIRE_DAYS=7,JWT_ISS=auth.ingeniia.co,JWT_AUD=ingeniia.co,RECAPTCHA_VERIFY_URL=https://www.google.com/recaptcha/api/siteverify,RECAPTCHA_MIN_SCORE=0.5,LOG_LEVEL=INFO'
+    - '--set-env-vars'
+    - 'FRONTEND_URL=https://ingeniia.co,CORS_ORIGINS=["https://ingeniia.co","http://api.ingeniia.co"]'
 
 options:
   diskSizeGb: 100
