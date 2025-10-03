@@ -29,8 +29,7 @@ COPY --from=builder /usr/local /usr/local
 COPY python/auth_service/ /app/
 
 # Script de arranque: migraciones + uvicorn con $PORT
-COPY container-images/auth_service/start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+COPY container-images/auth_service/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-EXPOSE 8080
-CMD ["/app/start.sh"]
+CMD ["/entrypoint.sh"]

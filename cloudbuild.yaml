@@ -69,8 +69,7 @@ steps:
     - '--memory=512Mi'
     - '--add-cloudsql-instances=ingeniiaservices:us-central1:ingeniia-auth-db'
     # secretos
-    - '--set-secrets'
-    - 'DATABASE_URL=AUTH_DATABASE_URL:latest,JWT_SECRET_KEY=AUTH_JWT_SECRET:latest,SENDGRID_API_KEY=AUTH_SENDGRID_API_KEY:latest,RECAPTCHA_SECRET_KEY=AUTH_RECAPTCHA_SECRET:latest'
+    - '--set-secrets=DATABASE_URL=AUTH_DATABASE_URL:latest,JWT_SECRET_KEY=AUTH_JWT_SECRET:latest,SENDGRID_API_KEY=AUTH_SENDGRID_API_KEY:latest,RECAPTCHA_SECRET_KEY=AUTH_RECAPTCHA_SECRET:latest'
     - '--env-vars-file=container-images/auth_service/env.run.yaml'
 
 options:
