@@ -71,11 +71,7 @@ steps:
     # secretos
     - '--set-secrets'
     - 'DATABASE_URL=AUTH_DATABASE_URL:latest,JWT_SECRET_KEY=AUTH_JWT_SECRET:latest,SENDGRID_API_KEY=AUTH_SENDGRID_API_KEY:latest,RECAPTCHA_SECRET_KEY=AUTH_RECAPTCHA_SECRET:latest'
-    # envs
-    - '--set-env-vars'
-    - 'ENVIRONMENT=development,JWT_ALGORITHM=HS256,ACCESS_TOKEN_EXPIRE_MINUTES=30,REFRESH_TOKEN_EXPIRE_DAYS=7,JWT_ISS=auth.ingeniia.co,JWT_AUD=ingeniia.co,RECAPTCHA_VERIFY_URL=https://www.google.com/recaptcha/api/siteverify,RECAPTCHA_MIN_SCORE=0.5,LOG_LEVEL=INFO'
-    - '--set-env-vars'
-    - 'FRONTEND_URL=https://ingeniia.co,CORS_ORIGINS=["https://ingeniia.co","http://api.ingeniia.co"]'
+    - '--env-vars-file=container-images/auth_service/env.run.yaml'
 
 options:
   diskSizeGb: 100
