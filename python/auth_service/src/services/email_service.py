@@ -1,31 +1,26 @@
 # src/services/email_service.py
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-import logging as log
+import httpx
 from src.core.config import settings
 
-async def send_verification_email(email: str, username: str, token: str):
-    """Envía email de verificación usando SendGrid"""
-    try:
-        verify_url = f"{settings.FRONTEND_URL}/verify-email?token={token}"
-        
-        message = Mail(
-            from_email=settings.FROM_EMAIL,
-            to_emails=email,
-        )
-        
-        message.template_id = settings.VERIFICATION_EMAIL_TEMPLATE_ID
-        message.dynamic_template_data = {
-            'username': username,
-            'verify_url': verify_url,
-            'company_name': 'inGeniia'
+SENDGRID_API = "https://api.sendgrid.com/v3/mail/send"
+
+async def send_verification_email(to_email: str, username: str, verify_url: str):
+    payload = {
+      "from": {
+        "email": settings.FROM_EMAIL.split('<')[-1].strip('> '),
+        "name": (settings.FROM_EMAIL.split('<')[0].strip() if '<' in settings.FROM_EMAIL else "Ingeniia")
+      },
+      "personalizations": [{
+        "to": [{"email": to_email}],
+        "dynamic_template_data": {
+          "username": username,
+          "verify_url": verify_url
         }
-        
-        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-        response = sg.send(message)
-        
-        log.info(f"Email enviado a {email}: status {response.status_code}")
-        return True
-    except Exception as e:
-        log.error(f"Error enviando email: {e}")
-        return False
+      }],
+      "template_id": settings.VERIFICATION_EMAIL_TEMPLATE_ID
+    }
+    headers = {"Authorization": f"Bearer {settings.SENDGRID_API_KEY}", "Content-Type": "application/json"}
+    async with httpx.AsyncClient(timeout=8) as client:
+      r = await client.post(SENDGRID_API, json=payload, headers=headers)
+      if r.status_code >= 300:
+        raise RuntimeError(f"SendGrid error {r.status_code}: {r.text}")
