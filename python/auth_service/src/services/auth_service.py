@@ -58,7 +58,6 @@ class AuthService:
             user_id=new_user.id,
             token=verification_token,
             expires_at=expires_at,
-            extra={"email": email}
         )
         
         db.add(token_record)
