@@ -49,18 +49,25 @@ class AuthService:
         await db.commit()
         await db.refresh(new_user)
         
+        # expiration
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
+        
         # Generar token de verificación
         verification_token = generate_verification_token()
         token_record = EmailVerificationToken(
             user_id=new_user.id,
             token=verification_token,
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=24)
+            expires_at=expires_at,
+            extra={"email": email}
         )
+        
         db.add(token_record)
         await db.commit()
         
+        verification_url = f"{settings.FRONTEND_URL}/verify?token={verification_token}"
+        
         # Enviar email
-        await send_verification_email(email, username, verification_token)
+        await send_verification_email(email, username, verification_url, verification_token)
         
         log.info(f"Usuario registrado: {username} ({email})")
         return {
@@ -282,16 +289,20 @@ class AuthService:
         
         # Generar nuevo token
         verification_token = generate_verification_token()
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
+        
         token_record = EmailVerificationToken(
             user_id=user.id,
             token=verification_token,
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=24)
+            expires_at=expires_at
         )
         db.add(token_record)
         await db.commit()
         
+        verification_url = f"{settings.FRONTEND_URL}/verify?token={verification_token}"
+        
         # Enviar email
-        await send_verification_email(email, user.username, verification_token)
+        await send_verification_email(email, user.username, verification_url, verification_token)
         
         log.info(f"Email de verificación reenviado: {email}")
         return {"message": "Email de verificación reenviado"}

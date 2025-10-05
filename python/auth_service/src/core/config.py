@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     # App
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"
+    EMAIL_TOKEN_EXPIRE_MINUTES: int = 120
     
     class Config:
         env_file = ".env"

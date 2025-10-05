@@ -4,7 +4,7 @@ from src.core.config import settings
 
 SENDGRID_API = "https://api.sendgrid.com/v3/mail/send"
 
-async def send_verification_email(to_email: str, username: str, verify_url: str):
+async def send_verification_email(to_email: str, username: str, verification_url: str, verification_token: str):
     payload = {
       "from": {
         "email": settings.FROM_EMAIL.split('<')[-1].strip('> '),
@@ -14,7 +14,8 @@ async def send_verification_email(to_email: str, username: str, verify_url: str)
         "to": [{"email": to_email}],
         "dynamic_template_data": {
           "username": username,
-          "verify_url": verify_url
+          "verification_url": verification_url,
+          "verification_token": verification_token
         }
       }],
       "template_id": settings.VERIFICATION_EMAIL_TEMPLATE_ID
