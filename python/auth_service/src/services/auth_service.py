@@ -35,9 +35,27 @@ class AuthService:
         
         if existing_user:
             if existing_user.username == username:
-                raise HTTPException(status_code=400, detail="Username ya está en uso")
+                if not existing_user.is_verified:
+                    # new token
+                    verification_token = generate_verification_token()
+                    expires_at = datetime.now(timezone.utc) + timedelta(
+                    minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
+                    
+                    # invalid old tokens
+                    await db.execute(update(EmailVerificationToken).where((EmailVerificationToken.user_id == existing_user.id) & 
+                                                                        (EmailVerificationToken.used_at.is_(None))).values(used_at=datetime.now(timezone.utc)))
+                    
+                    db.add(EmailVerificationToken(user_id=existing_user.id,token=verification_token,expires_at=expires_at))
+                    await db.commit()
+                    
+                    verification_url = f"{settings.FRONTEND_URL}/verify?token={verification_token}"
+                    await send_verification_email(email, existing_user.username or email.split("@")[0], verification_url, verification_token)
+                    
+                    return {"message": "Ya tenías un registro pendiente. Te reenviamos el correo de verificación."}
+                    
+                raise HTTPException(status_code=409, detail="Este email ya está verificado. Inicia sesión.")
             else:
-                raise HTTPException(status_code=400, detail="Email ya está registrado")
+                raise HTTPException(status_code=400, detail="Username ya está en uso")
         
         # Crear usuario
         new_user = User(
