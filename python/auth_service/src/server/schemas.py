@@ -13,7 +13,6 @@ class UserRegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=100)
     captcha_token: str
-    
     @validator('username')
     def username_alphanumeric(cls, v):
         if not re.match(r'^[a-zA-Z0-9_]+$', v):

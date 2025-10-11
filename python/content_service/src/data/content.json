@@ -15,7 +15,7 @@
     },
     {
       "id": "mlp002",
-      "title": "Perceptron Multicapa",
+      "title": "Redes Neuronales",
       "description": "En este video aprenderás que es un Perceptron Multicapa (MLP) en qué casos se utiliza y por qué es la base de la Inteligencia Artificial moderna.",
       "youtube_id": "bAB1hag3gLY",
       "duration_minutes": 30,
@@ -41,7 +41,7 @@
     },
     {
       "id": "mlp004",
-      "title": "Despliega y Versiona tu MLP",
+      "title": "Gestiona tus Datos y Modelos",
       "description": "En este video aprenderás a crear un pipeline completo para versionar profesionalmente tus datos y tus modelos.",
       "youtube_id": "rDS2i25MKJA",
       "duration_minutes": 37,
@@ -50,6 +50,19 @@
         "id": "mlp004_wb",
         "preview_url": "/images/whiteboards/mlp_wb_04.png",
         "file_url": "/whiteboards/mlp_wb_04.excalidraw"
+      }
+    },
+    {
+      "id": "mlp004",
+      "title": "Despliega tu Servicio IA",
+      "description": "En este video aprenderás a desplegar tu servicio de Inteligencia Artificial.",
+      "youtube_id": "9J-WMjetnGk",
+      "duration_minutes": 46,
+      "thumbnail_url": "/images/thumbnails/mlp_05.png",
+      "whiteboard": {
+        "id": "mlp005_wb",
+        "preview_url": "/images/whiteboards/mlp_wb_05.png",
+        "file_url": "/whiteboards/mlp_wb_05.excalidraw"
       }
     }
   ],
