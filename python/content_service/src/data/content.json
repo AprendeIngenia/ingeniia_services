@@ -15,7 +15,7 @@
     },
     {
       "id": "mlp002",
-      "title": "Redes Neuronales",
+      "title": "Redes Neuronales Funcionamiento",
       "description": "En este video aprenderás que es un Perceptron Multicapa (MLP) en qué casos se utiliza y por qué es la base de la Inteligencia Artificial moderna.",
       "youtube_id": "bAB1hag3gLY",
       "duration_minutes": 30,
@@ -53,7 +53,7 @@
       }
     },
     {
-      "id": "mlp004",
+      "id": "mlp005",
       "title": "Despliega tu Servicio IA",
       "description": "En este video aprenderás a desplegar tu servicio de Inteligencia Artificial.",
       "youtube_id": "9J-WMjetnGk",
