@@ -1,3 +1,4 @@
+# src/server/app.py
 import logging as log
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse

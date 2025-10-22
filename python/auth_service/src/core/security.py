@@ -46,4 +46,7 @@ def decode_token(token: str) -> dict:
 
 def generate_verification_token() -> str:
     """Genera token aleatorio para verificación de email"""
-    return secrets.token_urlsafe(32)
+    length = 6
+    otp_int = secrets.randbelow(10**length)
+    return f"{otp_int:0{length}d}"
+    # return secrets.token_urlsafe(32)
