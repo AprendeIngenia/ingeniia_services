@@ -49,4 +49,3 @@ def generate_verification_token() -> str:
     length = 6
     otp_int = secrets.randbelow(10**length)
     return f"{otp_int:0{length}d}"
-    # return secrets.token_urlsafe(32)

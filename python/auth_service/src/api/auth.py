@@ -108,4 +108,17 @@ async def logout(
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Obtener información del usuario actual"""
     return current_user
+
+@router.get("/verify-status")
+async def verify_status(email: str, db: AsyncSession = Depends(get_db_session)):
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    return {"exists": bool(user), "is_verified": bool(user and user.is_verified)}
+
+@router.get("/check-username")
+async def check_username(username: str, db: AsyncSession = Depends(get_db_session)):
+    result = await db.execute(select(User).where(User.username == username))
+    taken = result.scalar_one_or_none() is not None
+    return {"taken": taken}
+
     

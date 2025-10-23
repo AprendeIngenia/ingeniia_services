@@ -1,9 +1,9 @@
 # src/services/auth_service.py
+import random
 import logging as log
 
 from fastapi import HTTPException
 from sqlalchemy import update, select
-from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta, timezone
 
@@ -11,7 +11,25 @@ from src.models.user import User, EmailVerificationToken, RefreshToken
 from src.core.security import hash_password, verify_password, create_access_token, create_refresh_token, generate_verification_token
 from src.services.email_service import send_verification_email
 from src.services.captcha_service import verify_recaptcha
+from src.core.errors import AppErrorCode, raise_http
 from src.core.config import settings
+
+
+RESEND_COOLDOWN_SEC = 120
+
+def suggest_usernames(base: str, k: int = 4) -> list[str]:
+    base = base.lower().replace("@", "_").replace(".", "_")
+    pool = []
+    for salt in ["", "_ai", "_dl", "_ml", "_nn"]:
+        pool.append(f"{base}{salt}")
+    while len(pool) < k:
+        pool.append(f"{base}_{random.randint(10,999)}")
+    out, seen = [], set()
+    for p in pool:
+        if p not in seen:
+            seen.add(p)
+            out.append(p[:50])
+    return out[:k]
 
 
 class AuthService:
@@ -27,51 +45,58 @@ class AuthService:
         
         # Verificar captcha
         if not await verify_recaptcha(captcha_token, remote_ip):
-            raise HTTPException(status_code=400, detail="Verificación captcha falló")
+            raise_http(400, AppErrorCode.CAPTCHA_FAILED, "No pudimos validar que seas humano. Vuelve a intentarlo en unos segundos.")
         
         # Verificar si ya existe
-        result = await db.execute(select(User).where((User.username == username) | (User.email == email)))
-        existing_user = result.scalar_one_or_none()
+        email_q = await db.execute(select(User).where(User.email == email))
+        email_user = email_q.scalar_one_or_none()
+
+        user_q = await db.execute(select(User).where(User.username == username))
+        username_user = user_q.scalar_one_or_none()
         
-        if existing_user:
-            if existing_user.username == username:
-                if not existing_user.is_verified:
-                    # new token
-                    verification_token = generate_verification_token()
-                    expires_at = datetime.now(timezone.utc) + timedelta(
-                    minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
+        if email_user:
+            if email_user.is_verified:
+                raise_http(409, AppErrorCode.EMAIL_ALREADY_VERIFIED, "Este email ya está verificado. Inicia sesión.")
                     
-                    # invalid old tokens
-                    await db.execute(update(EmailVerificationToken).where((EmailVerificationToken.user_id == existing_user.id) & 
-                                                                        (EmailVerificationToken.used_at.is_(None))).values(used_at=datetime.now(timezone.utc)))
-                    
-                    db.add(EmailVerificationToken(user_id=existing_user.id,token=verification_token,expires_at=expires_at))
-                    await db.commit()
-                    
-                    verification_url = f"{settings.FRONTEND_URL}/verify?token={verification_token}"
-                    await send_verification_email(email, existing_user.username or email.split("@")[0], verification_url, verification_token)
-                    
-                    return {"message": "Ya tenías un registro pendiente. Te reenviamos el correo de verificación."}
-                    
-                raise HTTPException(status_code=409, detail="Este email ya está verificado. Inicia sesión.")
-            else:
-                raise HTTPException(status_code=400, detail="Username ya está en uso")
+            # email existing but without verify
+            last_token_q = await db.execute(select(EmailVerificationToken).where(EmailVerificationToken.user_id == email_user.id).order_by(EmailVerificationToken.created_at.desc()))
+            last = last_token_q.scalars().first()
+            
+            if last:
+                created = last.created_at or datetime.now(timezone.utc)
+                delta = (datetime.now(timezone.utc) - created).total_seconds()
+                
+                if delta < RESEND_COOLDOWN_SEC:
+                    retry_after = RESEND_COOLDOWN_SEC - int(delta)
+                    raise_http(429, AppErrorCode.VERIFICATION_ALREADY_SENT_RECENTLY, "Ya te enviamos un correo de verificación hace poco.", retryAfterSec=max(retry_after, 30))
+            
+            # invalid tokens
+            await db.execute(update(EmailVerificationToken).where((EmailVerificationToken.user_id == email_user.id) & (EmailVerificationToken.used_at.is_(None))).values(used_at=datetime.now(timezone.utc)))
+            
+            verification_token = generate_verification_token()
+            expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
+            db.add(EmailVerificationToken(user_id=email_user.id, token=verification_token, expires_at=expires_at))
+            
+            await db.commit()
+            verification_url = f"{settings.FRONTEND_URL}/verify?token={verification_token}"
+            await send_verification_email(email_user.email, email_user.username or email_user.email.split("@")[0], verification_url, verification_token)
+            return {"message": "Ya tenías un registro pendiente. Te reenviamos el correo de verificación."}
+                
+        if username_user:
+            raise_http(400, AppErrorCode.USERNAME_TAKEN, "Ese usuario ya está en uso. Prueba con una variante.", suggestions=suggest_usernames(username))
         
-        # Crear usuario
-        new_user = User(
-            username=username,
-            email=email,
-            password_hash=hash_password(password)
-        )
+        # Create new user
+        new_user = User(username=username, email=email, password_hash=hash_password(password))
+        
+        # add user
         db.add(new_user)
         await db.commit()
         await db.refresh(new_user)
         
-        # expiration
+        # new token
+        verification_token = generate_verification_token()
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
         
-        # Generar token de verificación
-        verification_token = generate_verification_token()
         token_record = EmailVerificationToken(
             user_id=new_user.id,
             token=verification_token,
@@ -82,11 +107,9 @@ class AuthService:
         await db.commit()
         
         verification_url = f"{settings.FRONTEND_URL}/verify?token={verification_token}"
-        
-        # Enviar email
-        await send_verification_email(email, username, verification_url, verification_token)
-        
+        await send_verification_email(new_user.email, new_user.username, verification_url, verification_token)
         log.info(f"Usuario registrado: {username} ({email})")
+        
         return {
             "message": "Usuario registrado. Verifica tu email.",
             "user_id": str(new_user.id),
@@ -107,7 +130,7 @@ class AuthService:
         token_record = result.scalar_one_or_none()
         
         if not token_record:
-            raise HTTPException(status_code=400, detail="Token inválido o expirado")
+            raise_http(400, AppErrorCode.TOKEN_INVALID_OR_EXPIRED, "Token inválido o expirado. Reenvía el correo de verificación y vuelve a intentar.")
         
         # Marcar usuario como verificado
         user_result = await db.execute(select(User).where(User.id == token_record.user_id))
@@ -155,7 +178,7 @@ class AuthService:
         
         # Verificar captcha
         if not await verify_recaptcha(captcha_token, remote_ip):
-            raise HTTPException(status_code=400, detail="Verificación captcha falló")
+            raise_http(400, AppErrorCode.CAPTCHA_FAILED, "No pudimos validar que seas humano. Vuelve a intentarlo en unos segundos.")
         
         # Buscar usuario
         result = await db.execute(
@@ -164,13 +187,13 @@ class AuthService:
         user = result.scalar_one_or_none()
         
         if not user or not verify_password(password, user.password_hash):
-            raise HTTPException(status_code=401, detail="Credenciales inválidas")
+            raise_http(401, AppErrorCode.BAD_CREDENTIALS, "Email o contraseña incorrectos.")
         
         if not user.is_active:
-            raise HTTPException(status_code=403, detail="Cuenta desactivada")
+            raise_http(403, AppErrorCode.ACCOUNT_INACTIVE, "Tu cuenta está desactivada. Contáctanos si crees que es un error.")
         
         if not user.is_verified:
-            raise HTTPException(status_code=403, detail="Email no verificado. Revisa tu correo.")
+            raise_http(403, AppErrorCode.EMAIL_NOT_VERIFIED, "Aún no verificas tu email. Revisa tu bandeja o reenvía el correo.")
         
         # Actualizar last_login
         user.last_login = datetime.now(timezone.utc)
@@ -288,9 +311,7 @@ class AuthService:
     async def resend_verification(db: AsyncSession, email: str):
         """Reenvía email de verificación"""
         
-        result = await db.execute(
-            select(User).where(User.email == email)
-        )
+        result = await db.execute(select(User).where(User.email == email))
         user = result.scalar_one_or_none()
         
         if not user:
@@ -299,12 +320,23 @@ class AuthService:
         if user.is_verified:
             raise HTTPException(status_code=400, detail="Email ya verificado")
         
-        # Invalidar tokens antiguos
+        last_token_q = await db.execute(select(EmailVerificationToken).where(EmailVerificationToken.user_id == user.id).order_by(EmailVerificationToken.created_at.desc()))
+        last = last_token_q.scalars().first()
+        
+        if last:
+            created = last.created_at or datetime.now(timezone.utc)
+            delta = (datetime.now(timezone.utc) - created).total_seconds()
+            
+            if delta < RESEND_COOLDOWN_SEC:
+                retry_after = RESEND_COOLDOWN_SEC - int(delta)
+                raise_http(429, AppErrorCode.VERIFICATION_ALREADY_SENT_RECENTLY, "Ya te enviamos un correo de verificación hace poco.", retryAfterSec=max(retry_after, 30))
+        
+        # invalid tokens
         await db.execute(update(EmailVerificationToken).where(
-            (EmailVerificationToken.user_id == user.id) &
+            (EmailVerificationToken.user_id == user.id) & 
             (EmailVerificationToken.used_at.is_(None))).values(used_at=datetime.now(timezone.utc)))
         
-        # Generar nuevo token
+        # new token
         verification_token = generate_verification_token()
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.EMAIL_TOKEN_EXPIRE_MINUTES)
         
@@ -316,10 +348,10 @@ class AuthService:
         db.add(token_record)
         await db.commit()
         
+        # send email
         verification_url = f"{settings.FRONTEND_URL}/verify?token={verification_token}"
-        
-        # Enviar email
         await send_verification_email(email, user.username, verification_url, verification_token)
         
         log.info(f"Email de verificación reenviado: {email}")
         return {"message": "Email de verificación reenviado"}
+    
