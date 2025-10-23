@@ -213,17 +213,11 @@ class AuthService:
         
         log.info(f"Login exitoso: {email}")
         return {
+            "message": "Inicio de sesión exitoso",
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-            "expires_in": 900,
-            "user": {
-                "id": str(user.id),
-                "username": user.username,
-                "email": user.email,
-                "tier": user.tier,
-                "is_verified": user.is_verified
-            }
+            "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
         }
         
     @staticmethod
